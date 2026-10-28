@@ -18,13 +18,20 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const body = req.body;
-      await client.set("latest_transaction", JSON.stringify(body));
+      
+      // הוספת התנועה החדשה לסוף הרשימה ב-Redis
+      await client.rPush("transactions_list", JSON.stringify(body));
+      
       return res.status(200).json({ success: true, data: body });
     } 
     
     if (req.method === 'GET') {
-      const data = await client.get("latest_transaction");
-      return res.status(200).json({ value: data ? JSON.parse(data) : null });
+      // שליפת כל התנועות שנשמרו ברשימה
+      const rawData = await client.lRange("transactions_list", 0, -1);
+      const transactions = rawData.map(item => JSON.parse(item));
+      
+      // מחזירים מערך של תנועות כפי שהאפליקציה מצפה לקבל
+      return res.status(200).json(transactions);
     }
 
     return res.status(405).json({ error: "Method not allowed" });
