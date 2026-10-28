@@ -1,27 +1,41 @@
 import { createClient } from "redis"
 import { NextResponse } from "next/server"
 
-// יצירת חיבור בעזרת מחרוזת ה-REDIS_URL הבלעדית
-let client;
-
-async function getRedisClient() {
-  if (!client) {
-    client = createClient({
+export async function POST(request) {
+  try {
+    const body = await request.json();
+    
+    const client = createClient({
       url: process.env.REDIS_URL
     });
-    client.on("error", (err) => console.error("Redis Client Error", err));
+    
     await client.connect();
+    
+    // שמירת הנתונים ב-Redis (לדוגמה כמפתח כללי או ברשימה)
+    await client.set("latest_transaction", JSON.stringify(body));
+    
+    await client.disconnect();
+
+    return NextResponse.json({ success: true, data: body });
+  } catch (error) {
+    console.error("Server Save Error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  return client;
 }
 
 export async function GET() {
   try {
-    const redis = await getRedisClient();
-    const value = await redis.get("myKey");
-    return NextResponse.json({ value });
+    const client = createClient({
+      url: process.env.REDIS_URL
+    });
+    
+    await client.connect();
+    const data = await client.get("latest_transaction");
+    await client.disconnect();
+
+    return NextResponse.json({ value: data ? JSON.parse(data) : null });
   } catch (error) {
-    console.error("Database Error:", error);
+    console.error("Server Read Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
