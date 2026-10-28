@@ -1,18 +1,27 @@
-import { Redis } from "@upstash/redis"
+import { createClient } from "redis"
 import { NextResponse } from "next/server"
 
-// יצירת חיבור אוטומטי מבוסס משתני הסביבה UPSTASH_REDIS_REST_URL ו-UPSTASH_REDIS_REST_TOKEN
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
-})
+// יצירת חיבור בעזרת מחרוזת ה-REDIS_URL הבלעדית
+let client;
+
+async function getRedisClient() {
+  if (!client) {
+    client = createClient({
+      url: process.env.REDIS_URL
+    });
+    client.on("error", (err) => console.error("Redis Client Error", err));
+    await client.connect();
+  }
+  return client;
+}
 
 export async function GET() {
   try {
-    const value = await redis.get("myKey")
-    return NextResponse.json({ value })
+    const redis = await getRedisClient();
+    const value = await redis.get("myKey");
+    return NextResponse.json({ value });
   } catch (error) {
-    console.error("Database Error:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error("Database Error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
