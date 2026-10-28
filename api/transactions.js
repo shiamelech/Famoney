@@ -1,41 +1,35 @@
-import { createClient } from "redis"
-import { NextResponse } from "next/server"
+import { createClient } from "redis";
 
-export async function POST(request) {
-  try {
-    const body = await request.json();
-    
-    const client = createClient({
+let client;
+async function getRedisClient() {
+  if (!client) {
+    client = createClient({
       url: process.env.REDIS_URL
     });
-    
+    client.on("error", (err) => console.error("Redis Client Error", err));
     await client.connect();
-    
-    // שמירת הנתונים ב-Redis (לדוגמה כמפתח כללי או ברשימה)
-    await client.set("latest_transaction", JSON.stringify(body));
-    
-    await client.disconnect();
-
-    return NextResponse.json({ success: true, data: body });
-  } catch (error) {
-    console.error("Server Save Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
   }
+  return client;
 }
 
-export async function GET() {
+export default async function handler(req, res) {
   try {
-    const client = createClient({
-      url: process.env.REDIS_URL
-    });
-    
-    await client.connect();
-    const data = await client.get("latest_transaction");
-    await client.disconnect();
+    const client = await getRedisClient();
 
-    return NextResponse.json({ value: data ? JSON.parse(data) : null });
+    if (req.method === 'POST') {
+      const body = req.body;
+      await client.set("latest_transaction", JSON.stringify(body));
+      return res.status(200).json({ success: true, data: body });
+    } 
+    
+    if (req.method === 'GET') {
+      const data = await client.get("latest_transaction");
+      return res.status(200).json({ value: data ? JSON.parse(data) : null });
+    }
+
+    return res.status(405).json({ error: "Method not allowed" });
   } catch (error) {
-    console.error("Server Read Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Server Error:", error);
+    return res.status(500).json({ error: error.message });
   }
 }
