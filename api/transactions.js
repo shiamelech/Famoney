@@ -1,10 +1,10 @@
-import { Redis } from '@upstash/redis';
+const { Redis } = require('@upstash/redis');
 
 // אתחול Redis באופן אוטומטי מתוך משתני הסביבה של Vercel / Upstash
 const redis = Redis.fromEnv();
 const STORAGE_KEY = 'family_transactions';
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
       const rawData = await redis.get(STORAGE_KEY);
       let transactions = rawData ? (typeof rawData === 'string' ? JSON.parse(rawData) : rawData) : [];
       transactions = transactions.filter((t) => t.id !== id);
-      
+
       await redis.set(STORAGE_KEY, JSON.stringify(transactions));
 
       return res.status(200).json({ success: true, id });
@@ -61,4 +61,4 @@ export default async function handler(req, res) {
     console.error('Database Error:', error);
     return res.status(500).json({ error: 'שגיאה בתקשורת מול מסד הנתונים', details: error.message });
   }
-}
+};
