@@ -3,12 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#4f46e5">
-
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4f46e5">
   <title>ניהול הוצאות משפחתיות</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Heebo', sans-serif; }
@@ -21,7 +19,7 @@
     <div class="max-w-5xl mx-auto px-4 flex justify-between items-center">
       <div>
         <h1 class="text-2xl font-bold">🏠 ניהול הוצאות משפחתיות</h1>
-        <p class="text-indigo-200 text-sm">מעקב נתונים בזמן אמת מחובר ל-Vercel</p>
+        <p class="text-indigo-200 text-sm">מעקב נתונים וניתוח סטטיסטי בזמן אמת</p>
       </div>
       <button onclick="loadTransactions()" class="bg-indigo-700 hover:bg-indigo-800 text-xs px-3 py-2 rounded-lg transition">
         🔄 רענן נתונים
@@ -31,30 +29,62 @@
 
   <main class="max-w-5xl mx-auto px-4 space-y-6">
 
-    <!-- Dashboard Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-        <span class="text-slate-500 text-sm font-medium">סך הכנסות</span>
-        <div id="totalIncome" class="text-2xl font-bold text-emerald-600 mt-1">₪0</div>
+    <!-- שורה 1: הוצאות והכנסות (סך הכל) -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
+        <div>
+          <span class="text-slate-500 text-sm font-semibold">סך הכנסות</span>
+          <div id="totalIncome" class="text-3xl font-extrabold text-emerald-600 mt-1">₪0</div>
+        </div>
+        <div class="bg-emerald-50 text-emerald-600 p-3 rounded-xl text-2xl">💰</div>
       </div>
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-        <span class="text-slate-500 text-sm font-medium">סך הוצאות</span>
-        <div id="totalExpenses" class="text-2xl font-bold text-rose-600 mt-1">₪0</div>
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
+        <div>
+          <span class="text-slate-500 text-sm font-semibold">סך הוצאות</span>
+          <div id="totalExpenses" class="text-3xl font-extrabold text-rose-600 mt-1">₪0</div>
+        </div>
+        <div class="bg-rose-50 text-rose-600 p-3 rounded-xl text-2xl">💸</div>
       </div>
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
-        <span class="text-slate-500 text-sm font-medium">יתרה חודשית</span>
-        <div id="netBalance" class="text-2xl font-bold text-indigo-600 mt-1">₪0</div>
-      </div>
-    </div>
+    </section>
 
-    <!-- Form Section -->
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <!-- שורה 2: מאזן, ממוצע הכנסות/הוצאות, וחציוני -->
+    <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+        <span class="text-xs font-semibold text-slate-500">מאזן כולל</span>
+        <div id="netBalance" class="text-xl font-bold mt-1 text-slate-800">₪0</div>
+      </div>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+        <span class="text-xs font-semibold text-slate-500">ממוצע להכנסה</span>
+        <div id="avgIncome" class="text-xl font-bold mt-1 text-emerald-600">₪0</div>
+      </div>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+        <span class="text-xs font-semibold text-slate-500">ממוצע להוצאה</span>
+        <div id="avgExpense" class="text-xl font-bold mt-1 text-rose-600">₪0</div>
+      </div>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+        <span class="text-xs font-semibold text-slate-500">חציוני הוצאות (Median)</span>
+        <div id="medianExpense" class="text-xl font-bold mt-1 text-indigo-600">₪0</div>
+      </div>
+    </section>
+
+    <!-- שורה 3: הוצאות חריגות -->
+    <section class="bg-amber-50 border border-amber-200 p-5 rounded-2xl">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-amber-600 text-lg">⚠️</span>
+        <h2 class="font-bold text-amber-900 text-md">הוצאות חריגות (גבוהות פי 1.5+ מהממוצע)</h2>
+      </div>
+      <div id="unusualExpensesList" class="flex flex-wrap gap-2 text-sm">
+        <span class="text-amber-700 text-xs">אין הוצאות חריגות כרגע.</span>
+      </div>
+    </section>
+
+    <!-- שורה 4: רכיב ההזנה -->
+    <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
       <h2 class="text-lg font-bold mb-4">הוספת תנועה חדשה</h2>
       <form id="transactionForm" onsubmit="handleAddTransaction(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">סוג תנועה</label>
-          <select id="type" class="w-full border rounded-lg p-2.5 bg-slate-50 focus:bg-white text-sm" onchange="updateCategories()">
+          <select id="type" class="w-full border rounded-lg p-2.5 bg-slate-50 text-sm" onchange="updateCategories()">
             <option value="expense">הוצאה</option>
             <option value="income">הכנסה</option>
           </select>
@@ -62,24 +92,22 @@
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">תיאור / נושא</label>
-          <input type="text" id="title" required placeholder="לדוגמה: קניות בסופר" class="w-full border rounded-lg p-2.5 bg-slate-50 focus:bg-white text-sm">
+          <input type="text" id="title" required placeholder="לדוגמה: קניות בסופר" class="w-full border rounded-lg p-2.5 bg-slate-50 text-sm">
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">סכום (₪)</label>
-          <input type="number" id="amount" step="0.01" required placeholder="0.00" class="w-full border rounded-lg p-2.5 bg-slate-50 focus:bg-white text-sm">
+          <input type="number" id="amount" step="0.01" required placeholder="0.00" class="w-full border rounded-lg p-2.5 bg-slate-50 text-sm">
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">קטגוריה</label>
-          <select id="category" class="w-full border rounded-lg p-2.5 bg-slate-50 focus:bg-white text-sm">
-            <!-- מתווסף דינמית -->
-          </select>
+          <select id="category" class="w-full border rounded-lg p-2.5 bg-slate-50 text-sm"></select>
         </div>
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">משלם / מוציא</label>
-          <select id="payer" class="w-full border rounded-lg p-2.5 bg-slate-50 focus:bg-white text-sm">
+          <select id="payer" class="w-full border rounded-lg p-2.5 bg-slate-50 text-sm">
             <option value="משותף">משותף</option>
             <option value="אבא">אבא</option>
             <option value="אמא">אמא</option>
@@ -89,7 +117,7 @@
 
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">תאריך</label>
-          <input type="date" id="date" required class="w-full border rounded-lg p-2.5 bg-slate-50 focus:bg-white text-sm">
+          <input type="date" id="date" required class="w-full border rounded-lg p-2.5 bg-slate-50 text-sm">
         </div>
 
         <div class="md:col-span-3">
@@ -98,15 +126,15 @@
           </button>
         </div>
       </form>
-    </div>
+    </section>
 
-    <!-- Table Section -->
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    <!-- שורה 5: היסטוריית תנועות -->
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
       <div class="p-4 border-b border-slate-100 flex justify-between items-center">
         <h2 class="font-bold text-lg">היסטוריית תנועות</h2>
-        <span id="loadingIndicator" class="text-xs text-slate-400 hidden">רענון...</span>
+        <span id="loadingIndicator" class="text-xs text-slate-400 hidden">טוען נתונים...</span>
       </div>
-      
+
       <div class="overflow-x-auto">
         <table class="w-full text-right text-sm">
           <thead class="bg-slate-50 text-slate-500 font-medium">
@@ -119,12 +147,10 @@
               <th class="p-3 text-center">פעולות</th>
             </tr>
           </thead>
-          <tbody id="transactionList" class="divide-y divide-slate-100">
-            <!-- נתונים יוכנסו כאן -->
-          </tbody>
+          <tbody id="transactionList" class="divide-y divide-slate-100"></tbody>
         </table>
       </div>
-    </div>
+    </section>
 
   </main>
 
@@ -134,7 +160,6 @@
 
     let transactions = [];
 
-    // הגדרת תאריך ברירת מחדל להיום
     document.getElementById('date').value = new Date().toISOString().split('T')[0];
 
     function updateCategories() {
@@ -152,9 +177,12 @@
         if (res.ok) {
           transactions = await res.json();
           renderData();
+        } else {
+          const errData = await res.json();
+          alert('שגיאה שטעינת נתונים מהשרת: ' + (errData.error || ''));
         }
       } catch (err) {
-        console.error('שגיאה שטעינת נתונים:', err);
+        console.error('שגיאה בחיבור לשרת:', err);
       } finally {
         showLoading(false);
       }
@@ -187,9 +215,12 @@
           document.getElementById('date').value = new Date().toISOString().split('T')[0];
           updateCategories();
           await loadTransactions();
+        } else {
+          const errData = await res.json();
+          alert('שגיאה בשמירת התנועה: ' + (errData.error || errData.details || ''));
         }
       } catch (err) {
-        alert('שגיאה בשמירת התנועה');
+        alert('שגיאה בתקשורת מול השרת בשמירה');
       } finally {
         submitBtn.disabled = false;
         submitBtn.innerText = '➕ הוסף תנועה';
@@ -203,10 +234,19 @@
         const res = await fetch(`/api/transactions?id=${id}`, { method: 'DELETE' });
         if (res.ok) {
           await loadTransactions();
+        } else {
+          alert('מחיקה נכשלה');
         }
       } catch (err) {
-        alert('שגיאה במחיקה');
+        alert('שגיאה בתקשורת במחיקה');
       }
+    }
+
+    function calculateMedian(arr) {
+      if (arr.length === 0) return 0;
+      const sorted = [...arr].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
     }
 
     function renderData() {
@@ -215,14 +255,23 @@
 
       let totalInc = 0;
       let totalExp = 0;
+      const incomes = [];
+      const expenses = [];
 
-      if (transactions.length === 0) {
+      if (!transactions || transactions.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">אין תנועות להצגה</td></tr>`;
       } else {
         transactions.forEach(t => {
           const isExpense = t.type === 'expense';
-          if (isExpense) totalExp += Number(t.amount);
-          else totalInc += Number(t.amount);
+          const amt = Number(t.amount);
+
+          if (isExpense) {
+            totalExp += amt;
+            expenses.push(amt);
+          } else {
+            totalInc += amt;
+            incomes.push(amt);
+          }
 
           const tr = document.createElement('tr');
           tr.className = 'hover:bg-slate-50 transition';
@@ -232,7 +281,7 @@
             <td class="p-3"><span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full text-xs">${t.category}</span></td>
             <td class="p-3 text-slate-500">${t.payer || '-'}</td>
             <td class="p-3 font-bold ${isExpense ? 'text-rose-600' : 'text-emerald-600'}">
-              ${isExpense ? '-' : '+'}${Number(t.amount).toLocaleString('he-IL')} ₪
+              ${isExpense ? '-' : '+'}${amt.toLocaleString('he-IL')} ₪
             </td>
             <td class="p-3 text-center">
               <button onclick="deleteTransaction('${t.id}')" class="text-slate-400 hover:text-rose-600 text-xs transition">🗑️ מחק</button>
@@ -242,30 +291,57 @@
         });
       }
 
+      // חישוב ממוצעים וחציוני
+      const avgIncVal = incomes.length > 0 ? (totalInc / incomes.length) : 0;
+      const avgExpVal = expenses.length > 0 ? (totalExp / expenses.length) : 0;
+      const medianExpVal = calculateMedian(expenses);
+      const net = totalInc - totalExp;
+
+      // עדכון כרטיסי הסטטיסטיקה
       document.getElementById('totalIncome').innerText = `₪${totalInc.toLocaleString('he-IL')}`;
       document.getElementById('totalExpenses').innerText = `₪${totalExp.toLocaleString('he-IL')}`;
-      const net = totalInc - totalExp;
+      
       const netEl = document.getElementById('netBalance');
       netEl.innerText = `₪${net.toLocaleString('he-IL')}`;
-      netEl.className = `text-2xl font-bold mt-1 ${net >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+      netEl.className = `text-xl font-bold mt-1 ${net >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+
+      document.getElementById('avgIncome').innerText = `₪${Math.round(avgIncVal).toLocaleString('he-IL')}`;
+      document.getElementById('avgExpense').innerText = `₪${Math.round(avgExpVal).toLocaleString('he-IL')}`;
+      document.getElementById('medianExpense').innerText = `₪${Math.round(medianExpVal).toLocaleString('he-IL')}`;
+
+      // חישוב הוצאות חריגות (הוצאה שגבוהה מפי 1.5 מממוצע ההוצאות)
+      const unusualList = document.getElementById('unusualExpensesList');
+      unusualList.innerHTML = '';
+      const threshold = avgExpVal * 1.5;
+
+      const unusualExpenses = transactions.filter(t => t.type === 'expense' && Number(t.amount) > threshold && threshold > 0);
+
+      if (unusualExpenses.length === 0) {
+        unusualList.innerHTML = `<span class="text-amber-700 text-xs">אין הוצאות חריגות כרגע (מעל פי 1.5 מהממוצע).</span>`;
+      } else {
+        unusualExpenses.forEach(t => {
+          const badge = document.createElement('span');
+          badge.className = 'bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1.5 rounded-lg font-medium text-xs flex items-center gap-1';
+          badge.innerHTML = `<strong>${t.title}</strong> (${t.date}): ${Number(t.amount).toLocaleString('he-IL')} ₪`;
+          unusualList.appendChild(badge);
+        });
+      }
     }
 
     function showLoading(show) {
       document.getElementById('loadingIndicator').classList.toggle('hidden', !show);
     }
 
-    // טעינה ראשונית
     loadTransactions();
   </script>
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js')
-        .then((reg) => console.log('Service Worker registered successfully:', reg.scope))
-        .catch((err) => console.log('Service Worker registration failed:', err));
-    });
-  }
-</script>
-
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((reg) => console.log('Service Worker registrado:', reg.scope))
+          .catch((err) => console.log('Service Worker error:', err));
+      });
+    }
+  </script>
 </body>
 </html>
