@@ -16,7 +16,7 @@
 
   <!-- Header -->
   <header class="bg-indigo-600 text-white py-6 shadow-md mb-8">
-    <div class="max-w-5xl mx-auto px-4 flex justify-between items-center">
+    <div class="max-w-4xl mx-auto px-4 flex justify-between items-center">
       <div>
         <h1 class="text-2xl font-bold">🏠 ניהול הוצאות משפחתיות</h1>
         <p class="text-indigo-200 text-sm">מעקב נתונים וניתוח סטטיסטי בזמן אמת</p>
@@ -27,58 +27,52 @@
     </div>
   </header>
 
-  <main class="max-w-5xl mx-auto px-4 space-y-6">
+  <main class="max-w-4xl mx-auto px-4 space-y-6">
 
-    <!-- שורה 1: הוצאות והכנסות (סך הכל) -->
-    <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
-        <div>
-          <span class="text-slate-500 text-sm font-semibold">סך הכנסות</span>
-          <div id="totalIncome" class="text-3xl font-extrabold text-emerald-600 mt-1">₪0</div>
-        </div>
-        <div class="bg-emerald-50 text-emerald-600 p-3 rounded-xl text-2xl">💰</div>
+    <!-- שורה עליונה: הוצאות והכנסות (ריבועים מרוכזים) -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 text-center flex flex-col items-center justify-center">
+        <span class="text-slate-500 text-sm font-semibold mb-1">סך הכנסות</span>
+        <div id="totalIncome" class="text-3xl font-extrabold text-emerald-600">₪0</div>
       </div>
-      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex justify-between items-center">
-        <div>
-          <span class="text-slate-500 text-sm font-semibold">סך הוצאות</span>
-          <div id="totalExpenses" class="text-3xl font-extrabold text-rose-600 mt-1">₪0</div>
-        </div>
-        <div class="bg-rose-50 text-rose-600 p-3 rounded-xl text-2xl">💸</div>
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 text-center flex flex-col items-center justify-center">
+        <span class="text-slate-500 text-sm font-semibold mb-1">סך הוצאות</span>
+        <div id="totalExpenses" class="text-3xl font-extrabold text-rose-600">₪0</div>
       </div>
     </section>
 
-    <!-- שורה 2: מאזן, ממוצע הכנסות/הוצאות, וחציוני -->
-    <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-        <span class="text-xs font-semibold text-slate-500">מאזן כולל</span>
-        <div id="netBalance" class="text-xl font-bold mt-1 text-slate-800">₪0</div>
+    <!-- שורה שנייה: מאזן, ממוצע הכנסות, ממוצע הוצאות, חציוני (ריבועים קומפקטיים) -->
+    <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center">
+        <span class="text-xs font-semibold text-slate-500 block mb-1">מאזן כולל</span>
+        <div id="netBalance" class="text-lg font-bold text-slate-800">₪0</div>
       </div>
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-        <span class="text-xs font-semibold text-slate-500">ממוצע להכנסה</span>
-        <div id="avgIncome" class="text-xl font-bold mt-1 text-emerald-600">₪0</div>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center">
+        <span class="text-xs font-semibold text-slate-500 block mb-1">ממוצע הכנסות</span>
+        <div id="avgIncome" class="text-lg font-bold text-emerald-600">₪0</div>
       </div>
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-        <span class="text-xs font-semibold text-slate-500">ממוצע להוצאה</span>
-        <div id="avgExpense" class="text-xl font-bold mt-1 text-rose-600">₪0</div>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center">
+        <span class="text-xs font-semibold text-slate-500 block mb-1">ממוצע הוצאות</span>
+        <div id="avgExpense" class="text-lg font-bold text-rose-600">₪0</div>
       </div>
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-        <span class="text-xs font-semibold text-slate-500">חציוני הוצאות (Median)</span>
-        <div id="medianExpense" class="text-xl font-bold mt-1 text-indigo-600">₪0</div>
-      </div>
-    </section>
-
-    <!-- שורה 3: הוצאות חריגות -->
-    <section class="bg-amber-50 border border-amber-200 p-5 rounded-2xl">
-      <div class="flex items-center gap-2 mb-3">
-        <span class="text-amber-600 text-lg">⚠️</span>
-        <h2 class="font-bold text-amber-900 text-md">הוצאות חריגות (גבוהות פי 1.5+ מהממוצע)</h2>
-      </div>
-      <div id="unusualExpensesList" class="flex flex-wrap gap-2 text-sm">
-        <span class="text-amber-700 text-xs">אין הוצאות חריגות כרגע.</span>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center">
+        <span class="text-xs font-semibold text-slate-500 block mb-1">חציוני (Median)</span>
+        <div id="medianExpense" class="text-lg font-bold text-indigo-600">₪0</div>
       </div>
     </section>
 
-    <!-- שורה 4: רכיב ההזנה -->
+    <!-- שורה שלישית: הוצאות חריגות שלא היו -->
+    <section class="bg-amber-50 border border-amber-200 p-4 rounded-2xl text-center">
+      <div class="flex items-center justify-center gap-2 mb-2">
+        <span class="text-amber-600 text-base">⚠️</span>
+        <h2 class="font-bold text-amber-900 text-xs sm:text-sm">הוצאות חריגות (גבוהות פי 1.5+ מהממוצע)</h2>
+      </div>
+      <div id="unusualExpensesList" class="flex flex-wrap justify-center gap-2 text-xs">
+        <span class="text-amber-700">אין הוצאות חריגות כרגע.</span>
+      </div>
+    </section>
+
+    <!-- שורה רביעית: רכיב ההזנה של הכנסות והוצאות -->
     <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
       <h2 class="text-lg font-bold mb-4">הוספת תנועה חדשה</h2>
       <form id="transactionForm" onsubmit="handleAddTransaction(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -128,7 +122,7 @@
       </form>
     </section>
 
-    <!-- שורה 5: היסטוריית תנועות -->
+    <!-- שורה חמישית: היסטוריית תנועות -->
     <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
       <div class="p-4 border-b border-slate-100 flex justify-between items-center">
         <h2 class="font-bold text-lg">היסטוריית תנועות</h2>
@@ -179,7 +173,7 @@
           renderData();
         } else {
           const errData = await res.json();
-          alert('שגיאה שטעינת נתונים מהשרת: ' + (errData.error || ''));
+          alert('שגיאה בטעינת נתונים מהשרת: ' + (errData.error || ''));
         }
       } catch (err) {
         console.error('שגיאה בחיבור לשרת:', err);
@@ -291,25 +285,22 @@
         });
       }
 
-      // חישוב ממוצעים וחציוני
       const avgIncVal = incomes.length > 0 ? (totalInc / incomes.length) : 0;
       const avgExpVal = expenses.length > 0 ? (totalExp / expenses.length) : 0;
       const medianExpVal = calculateMedian(expenses);
       const net = totalInc - totalExp;
 
-      // עדכון כרטיסי הסטטיסטיקה
       document.getElementById('totalIncome').innerText = `₪${totalInc.toLocaleString('he-IL')}`;
       document.getElementById('totalExpenses').innerText = `₪${totalExp.toLocaleString('he-IL')}`;
       
       const netEl = document.getElementById('netBalance');
       netEl.innerText = `₪${net.toLocaleString('he-IL')}`;
-      netEl.className = `text-xl font-bold mt-1 ${net >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+      netEl.className = `text-lg font-bold ${net >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
 
       document.getElementById('avgIncome').innerText = `₪${Math.round(avgIncVal).toLocaleString('he-IL')}`;
       document.getElementById('avgExpense').innerText = `₪${Math.round(avgExpVal).toLocaleString('he-IL')}`;
       document.getElementById('medianExpense').innerText = `₪${Math.round(medianExpVal).toLocaleString('he-IL')}`;
 
-      // חישוב הוצאות חריגות (הוצאה שגבוהה מפי 1.5 מממוצע ההוצאות)
       const unusualList = document.getElementById('unusualExpensesList');
       unusualList.innerHTML = '';
       const threshold = avgExpVal * 1.5;
@@ -321,7 +312,7 @@
       } else {
         unusualExpenses.forEach(t => {
           const badge = document.createElement('span');
-          badge.className = 'bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1.5 rounded-lg font-medium text-xs flex items-center gap-1';
+          badge.className = 'bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1.5 rounded-lg font-medium text-xs flex items-center gap-1 inline-flex';
           badge.innerHTML = `<strong>${t.title}</strong> (${t.date}): ${Number(t.amount).toLocaleString('he-IL')} ₪`;
           unusualList.appendChild(badge);
         });
@@ -338,7 +329,7 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
-          .then((reg) => console.log('Service Worker registrado:', reg.scope))
+          .then((reg) => console.log('Service Worker registered:', reg.scope))
           .catch((err) => console.log('Service Worker error:', err));
       });
     }
