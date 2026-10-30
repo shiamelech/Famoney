@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <title>ניהול הוצאות משפחתיות</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Heebo', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
+
+  <!-- Header -->
+  <header class="bg-indigo-600 text-white py-6 shadow-md mb-8">
+    <div class="max-w-4xl mx-auto px-4 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold">🏠 ניהול הוצאות משפחתיות</h1>
+        <p class="text-indigo-200 text-sm">מעקב נתונים וניתוח סטטיסטי בזמן אמת</p>
+      </div>
+      <button onclick="loadTransactions()" class="bg-indigo-700 hover:bg-indigo-800 text-xs px-3 py-2 rounded-lg transition">
+        🔄 רענן נתונים
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 space-y-6">
+
+    <!-- שורה עליונה: הוצאות והכנסות (ריבועים מרוכזים) -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 text-center flex flex-col items-center justify-center">
+        <span class="text-slate-500 text-sm font-semibold mb-1">סך הכנסות</span>
+        <div id="totalIncome" class="text-3xl font-extrabold text-emerald-600">₪0</div>
+      </div>
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 text-center flex flex-col items-center justify-center">
+        <span class="text-slate-500 text-sm font-semibold mb-1">סך הוצאות</span>
+        <div id="totalExpenses" class="text-3xl font-extrabold text-rose-600">₪0</div>
+      </div>
+    </section>
+
+    <!-- שורה שנייה: מאזן, ממוצע הכנסות, ממוצע הוצאות, חציוני (ריבועים קומפקטיים) -->
+    <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center">
+        <span class="text-xs font-semibold text-slate-500 block mb-1">מאזן כולל</span>
+        <div id="netBalance" class="text-lg font-bold text-slate-800">₪0</div>
+      </div>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center">
+        <span class="text-xs font-semibold text-slate-500 block mb-1">ממוצע הכנסות</span>
+        <div id="avgIncome" class="text-lg font-bold text-emerald-600">₪0</div>
+      </div>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center">
+        <span class="text-xs font-semibold text-slate-500 block mb-1">ממוצע הוצאות</span>
+        <div id="avgExpense" class="text-lg font-bold text-rose-600">₪0</div>
+      </div>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center">
+        <span class="text-xs font-semibold text-slate-500 block mb-1">חציוני (Median)</span>
+        <div id="medianExpense" class="text-lg font-bold text-indigo-600">₪0</div>
+      </div>
+    </section>
+
+    <!-- שורה שלישית: הוצאות חריגות שלא היו -->
+    <section class="bg-amber-50 border border-amber-200 p-4 rounded-2xl text-center">
+      <div class="flex items-center justify-center gap-2 mb-2">
+        <span class="text-amber-600 text-base">⚠️</span>
+        <h2 class="font-bold text-amber-900 text-xs sm:text-sm">הוצאות חריגות (גבוהות פי 1.5+ מהממוצע)</h2>
+      </div>
+      <div id="unusualExpensesList" class="flex flex-wrap justify-center gap-2 text-xs">
+        <span class="text-amber-700">אין הוצאות חריגות כרגע.</span>
+      </div>
+    </section>
+
+    <!-- שורה רביעית: רכיב ההזנה של הכנסות והוצאות -->
+    <section class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+      <h2 class="text-lg font-bold mb-4">הוספת תנועה חדשה</h2>
+      <form id="transactionForm" onsubmit="handleAddTransaction(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">סוג תנועה</label>
+          <select id="type" class="w-full border rounded-lg p-2.5 bg-slate-50 text-sm" onchange="updateCategories()">
+            <option value="expense">הוצאה</option>
+            <option value="income">הכנסה</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">תיאור / נושא</label>
+          <input type="text" id="title" required placeholder="לדוגמה: קניות בסופר" class="w-full border rounded-lg p-2.5 bg-slate-50 text-sm">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">סכום (₪)</label>
+          <input type="number" id="amount" step="0.01" required placeholder="0.00" class="w-full border rounded-lg p-2.5 bg-slate-50 text-sm">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">קטגוריה</label>
+          <select id="category" class="w-full border rounded-lg p-2.5 bg-slate-50 text-sm"></select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">משלם / מוציא</label>
+          <select id="payer" class="w-full border rounded-lg p-2.5 bg-slate-50 text-sm">
+            <option value="משותף">משותף</option>
+            <option value="אבא">אבא</option>
+            <option value="אמא">אמא</option>
+            <option value="אחר">אחר</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">תאריך</label>
+          <input type="date" id="date" required class="w-full border rounded-lg p-2.5 bg-slate-50 text-sm">
+        </div>
+
+        <div class="md:col-span-3">
+          <button type="submit" id="submitBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition shadow">
+            ➕ הוסף תנועה
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- שורה חמישית: היסטוריית תנועות -->
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+        <h2 class="font-bold text-lg">היסטוריית תנועות</h2>
+        <span id="loadingIndicator" class="text-xs text-slate-400 hidden">טוען נתונים...</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-right text-sm">
+          <thead class="bg-slate-50 text-slate-500 font-medium">
+            <tr>
+              <th class="p-3">תאריך</th>
+              <th class="p-3">תיאור</th>
+              <th class="p-3">קטגוריה</th>
+              <th class="p-3">משלם</th>
+              <th class="p-3">סכום</th>
+              <th class="p-3 text-center">פעולות</th>
+            </tr>
+          </thead>
+          <tbody id="transactionList" class="divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const expenseCategories = ['מזון וקניות', 'מגורים וחשבונות', 'תחבורה ורכב', 'חינוך וחוגים', 'בילויים ופנאי', 'בריאות', 'שונות'];
+    const incomeCategories = ['משכורת', 'קצבה/מענק', 'השקעות', 'מתנה', 'אחר'];
+
+    let transactions = [];
+
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+
+    function updateCategories() {
+      const type = document.getElementById('type').value;
+      const catSelect = document.getElementById('category');
+      const list = type === 'expense' ? expenseCategories : incomeCategories;
+      catSelect.innerHTML = list.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+    updateCategories();
+
+    async function loadTransactions() {
+      showLoading(true);
+      try {
+        const res = await fetch('/api/transactions');
+        if (res.ok) {
+          transactions = await res.json();
+          renderData();
+        } else {
+          const errData = await res.json();
+          alert('שגיאה בטעינת נתונים מהשרת: ' + (errData.error || ''));
+        }
+      } catch (err) {
+        console.error('שגיאה בחיבור לשרת:', err);
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    async function handleAddTransaction(e) {
+      e.preventDefault();
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'שומר...';
+
+      const item = {
+        type: document.getElementById('type').value,
+        title: document.getElementById('title').value,
+        amount: parseFloat(document.getElementById('amount').value),
+        category: document.getElementById('category').value,
+        payer: document.getElementById('payer').value,
+        date: document.getElementById('date').value,
+      };
+
+      try {
+        const res = await fetch('/api/transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item)
+        });
+
+        if (res.ok) {
+          document.getElementById('transactionForm').reset();
+          document.getElementById('date').value = new Date().toISOString().split('T')[0];
+          updateCategories();
+          await loadTransactions();
+        } else {
+          const errData = await res.json();
+          alert('שגיאה בשמירת התנועה: ' + (errData.error || errData.details || ''));
+        }
+      } catch (err) {
+        alert('שגיאה בתקשורת מול השרת בשמירה');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = '➕ הוסף תנועה';
+      }
+    }
+
+    async function deleteTransaction(id) {
+      if (!confirm('האם אתה בטוח שברצונך למחוק תנועה זו?')) return;
+
+      try {
+        const res = await fetch(`/api/transactions?id=${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          await loadTransactions();
+        } else {
+          alert('מחיקה נכשלה');
+        }
+      } catch (err) {
+        alert('שגיאה בתקשורת במחיקה');
+      }
+    }
+
+    function calculateMedian(arr) {
+      if (arr.length === 0) return 0;
+      const sorted = [...arr].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    }
+
+    function renderData() {
+      const tbody = document.getElementById('transactionList');
+      tbody.innerHTML = '';
+
+      let totalInc = 0;
+      let totalExp = 0;
+      const incomes = [];
+      const expenses = [];
+
+      if (!transactions || transactions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">אין תנועות להצגה</td></tr>`;
+      } else {
+        transactions.forEach(t => {
+          const isExpense = t.type === 'expense';
+          const amt = Number(t.amount);
+
+          if (isExpense) {
+            totalExp += amt;
+            expenses.push(amt);
+          } else {
+            totalInc += amt;
+            incomes.push(amt);
+          }
+
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-slate-50 transition';
+          tr.innerHTML = `
+            <td class="p-3 text-slate-500">${t.date}</td>
+            <td class="p-3 font-medium">${t.title}</td>
+            <td class="p-3"><span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full text-xs">${t.category}</span></td>
+            <td class="p-3 text-slate-500">${t.payer || '-'}</td>
+            <td class="p-3 font-bold ${isExpense ? 'text-rose-600' : 'text-emerald-600'}">
+              ${isExpense ? '-' : '+'}${amt.toLocaleString('he-IL')} ₪
+            </td>
+            <td class="p-3 text-center">
+              <button onclick="deleteTransaction('${t.id}')" class="text-slate-400 hover:text-rose-600 text-xs transition">🗑️ מחק</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      const avgIncVal = incomes.length > 0 ? (totalInc / incomes.length) : 0;
+      const avgExpVal = expenses.length > 0 ? (totalExp / expenses.length) : 0;
+      const medianExpVal = calculateMedian(expenses);
+      const net = totalInc - totalExp;
+
+      document.getElementById('totalIncome').innerText = `₪${totalInc.toLocaleString('he-IL')}`;
+      document.getElementById('totalExpenses').innerText = `₪${totalExp.toLocaleString('he-IL')}`;
+      
+      const netEl = document.getElementById('netBalance');
+      netEl.innerText = `₪${net.toLocaleString('he-IL')}`;
+      netEl.className = `text-lg font-bold ${net >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+
+      document.getElementById('avgIncome').innerText = `₪${Math.round(avgIncVal).toLocaleString('he-IL')}`;
+      document.getElementById('avgExpense').innerText = `₪${Math.round(avgExpVal).toLocaleString('he-IL')}`;
+      document.getElementById('medianExpense').innerText = `₪${Math.round(medianExpVal).toLocaleString('he-IL')}`;
+
+      const unusualList = document.getElementById('unusualExpensesList');
+      unusualList.innerHTML = '';
+      const threshold = avgExpVal * 1.5;
+
+      const unusualExpenses = transactions.filter(t => t.type === 'expense' && Number(t.amount) > threshold && threshold > 0);
+
+      if (unusualExpenses.length === 0) {
+        unusualList.innerHTML = `<span class="text-amber-700 text-xs">אין הוצאות חריגות כרגע (מעל פי 1.5 מהממוצע).</span>`;
+      } else {
+        unusualExpenses.forEach(t => {
+          const badge = document.createElement('span');
+          badge.className = 'bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1.5 rounded-lg font-medium text-xs flex items-center gap-1 inline-flex';
+          badge.innerHTML = `<strong>${t.title}</strong> (${t.date}): ${Number(t.amount).toLocaleString('he-IL')} ₪`;
+          unusualList.appendChild(badge);
+        });
+      }
+    }
+
+    function showLoading(show) {
+      document.getElementById('loadingIndicator').classList.toggle('hidden', !show);
+    }
+
+    loadTransactions();
+  </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((reg) => console.log('Service Worker registered:', reg.scope))
+          .catch((err) => console.log('Service Worker error:', err));
+      });
+    }
+  </script>
+</body>
+</html>
