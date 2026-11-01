@@ -15,23 +15,33 @@ async function getRedisClient() {
 export default async function handler(req, res) {
   try {
     const client = await getRedisClient();
+    const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const listType = urlObj.searchParams.get('list');
+    const redisKey = listType === 'recurring' ? 'recurring_list' : 'transactions_list';
 
     if (req.method === 'POST') {
       const body = req.body;
-      
-      // הוספת התנועה החדשה לסוף הרשימה ב-Redis
-      await client.rPush("transactions_list", JSON.stringify(body));
-      
+      await client.rPush(redisKey, JSON.stringify(body));
       return res.status(200).json({ success: true, data: body });
     } 
     
     if (req.method === 'GET') {
-      // שליפת כל התנועות שנשמרו ברשימה
-      const rawData = await client.lRange("transactions_list", 0, -1);
-      const transactions = rawData.map(item => JSON.parse(item));
-      
-      // מחזירים מערך של תנועות כפי שהאפליקציה מצפה לקבל
-      return res.status(200).json(transactions);
+      const rawData = await client.lRange(redisKey, 0, -1);
+      const items = rawData.map(item => JSON.parse(item));
+      return res.status(200).json(items);
+    }
+
+    if (req.method === 'DELETE') {
+      // מחיקת פריט ספציפי מהרשימה (לפי אינדקס או מזהה)
+      const index = urlObj.searchParams.get('index');
+      if (index !== null) {
+        const rawData = await client.lRange(redisKey, 0, -1);
+        if (rawData[index]) {
+          await client.lRem(redisKey, 1, rawData[index]);
+          return res.status(200).json({ success: true });
+        }
+      }
+      return res.status(400).json({ error: "Invalid index for deletion" });
     }
 
     return res.status(405).json({ error: "Method not allowed" });
